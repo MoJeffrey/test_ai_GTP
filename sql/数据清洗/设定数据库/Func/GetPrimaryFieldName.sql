@@ -1,0 +1,30 @@
+DROP FUNCTION IF EXISTS `GetPrimaryFieldName`;
+DELIMITER ;
+DELIMITER ;;
+CREATE FUNCTION
+    GetPrimaryFieldName(
+        p_TABLE_SCHEMA VARCHAR(200),
+        p_TABLE_NAME VARCHAR(200)
+    )
+    RETURNS VARCHAR(200)
+    DETERMINISTIC
+BEGIN
+    DECLARE v_FieldName VARCHAR(200);
+    DECLARE v_errorMsg VARCHAR(200);
+
+    SELECT
+        COLUMN_NAME
+    INTO
+        v_FieldName
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = p_TABLE_SCHEMA AND TABLE_NAME = p_TABLE_NAME AND COLUMN_KEY = 'PRI';
+
+    IF v_FieldName IS NULL THEN
+        SET v_errorMsg := CONCAT('該Table不存在: ', p_TABLE_SCHEMA, '.', p_TABLE_NAME);
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = v_errorMsg;
+    END IF;
+
+    RETURN v_FieldName;
+End;;
+DELIMITER ;
